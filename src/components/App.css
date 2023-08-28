@@ -1,0 +1,19 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(16, 30px);
+  grid-gap: 2px;
+}
+
+.pixel {
+  width: 30px;
+  height: 30px;
+}
+
+.canvas-container {
+  display: flex;           /* Use Flexbox */
+  align-items: center;     /* Center the canvases vertically if there's extra space */
+}
+
+#drawingCanvas, #viewingCanvas {
+  margin: 5px; /* Optional: Add some space between the two canvases */
+}
