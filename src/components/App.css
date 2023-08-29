@@ -1,3 +1,60 @@
+.app-container {
+  display: flex;
+}
+
+.tool-content {
+  flex: 1; /* This allows your main content to take up remaining space after frames */
+  margin-right: 20px; /* Gives some space between main content and frame previews */
+}
+
+.main-content {
+  flex: 1; /* This allows your main content to take up remaining space after frames */
+  margin-right: 20px; /* Gives some space between main content and frame previews */
+}
+
+.frame-container {
+  margin: 0px;
+  padding: 0px 5px 0px 0px;
+  min-width: 65px;
+}
+
+.button-container button, .frame-container button {
+  display: flex;
+  margin: 5px;
+  padding: 5px 10px;        /* Add padding to increase button size */      /* Hide overflowing text */
+  white-space: nowrap;      /* Prevents the text from wrapping onto the next line */
+  text-overflow: ellipsis;  /* Adds an ellipsis (...) when the text overflows */
+  width: fit-content;       /* Maximum width for the button */
+  align-items: center;
+  justify-content: center;
+}
+
+
+.frame-preview {
+    /* Adjust as needed */
+    display: block;
+    margin: 0px;
+    padding: 0px;
+    border: 1px solid #ddd;
+}
+
+.selected-frame {
+  border: 2px solid blue; /* Or any other highlight style */
+}
+
+.scaled-container {
+  width: 65px;
+  height: 65px;
+  overflow: hidden;
+}
+
+.frame-preview canvas {
+  padding: 0px;
+  margin: 0px;
+  transform: scale(0.25);
+  transform-origin: top left;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(16, 30px);
