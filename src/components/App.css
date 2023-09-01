@@ -12,6 +12,9 @@
   margin-right: 20px; /* Gives some space between main content and frame previews */
 }
 
+.animation-content canvas {
+}
+
 .frame-container {
   margin: 0px;
   padding: 0px 5px 0px 0px;
@@ -34,7 +37,7 @@
     /* Adjust as needed */
     display: block;
     margin: 0px;
-    padding: 0px;
+    padding: 2px;
     border: 1px solid #ddd;
 }
 
@@ -46,6 +49,23 @@
   width: 65px;
   height: 65px;
   overflow: hidden;
+}
+
+.animation-container {
+  display: block;
+  margin: 20px 10px 0px 0px;
+  padding: 2px;
+  border: 1px solid #ddd;
+  height: fit-content;
+  width: 270px;
+}
+
+.scaled-animation-container {
+}
+
+.animation-content {
+  padding: 0px;
+  margin: 0px;
 }
 
 .frame-preview canvas {
@@ -73,4 +93,20 @@
 
 #drawingCanvas, #viewingCanvas {
   margin: 5px; /* Optional: Add some space between the two canvases */
+}
+
+.button-container-frame {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.button-container-frame button {
+  width: 10px;
+  padding: 8px;
+  margin: 2px 0px 0px 0px;
+}
+
+.button-container-selected button {
+  background-color: blue;
 }

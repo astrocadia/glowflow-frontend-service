@@ -3,38 +3,81 @@ import { SketchPicker } from 'react-color';
 import { io } from 'socket.io-client';
 import pencilImg from '../assets/pencil-cursor.png'
 import './App.css'
+import * as Constants from './constants';
+import FrameList from './FrameList';
+import useUndo  from './hooks/useUndo'
 
-const SOCKET_SERVER_URL = 'ws://localhost:8080';
-const MATRIX_SIZE = 16;
-const PIXEL_SIZE = 16;
-const CANVAS_WIDTH = MATRIX_SIZE * PIXEL_SIZE;
-const CANVAS_HEIGHT = MATRIX_SIZE * PIXEL_SIZE;
-const PIXEL_COUNT = MATRIX_SIZE * MATRIX_SIZE;
+// Create a zero-filled Uint8ClampedArray for the ImageData
+const initialDataArray = new Uint8ClampedArray(Constants.CANVAS_WIDTH * Constants.CANVAS_HEIGHT * 4).fill(0);
+
+// Create an ImageData object from the zero-filled array
+const initialImageData = new ImageData(initialDataArray, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
 
 const App = () => {
+  const [broadcastAnimation, setBroadcastAnimation] = useState(false);
   const [color, setColor] = useState('#ff0000');
   const [brightness, setBrightness] = useState(1);
   const [gamma, setGamma] = useState(1);
   const [RGBAdjustment, setRGBAdjustment] = useState([1, 1, 1]);
   const [drawing, setDrawing] = useState(false);
-  const [savedFrames, setSavedFrames] = useState<ImageData[]>([]);
-  const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
+  const [savedFrames, setSavedFrames, undoFrames] = useUndo<ImageData[]>([initialImageData]);
+  const [selectedFrameIndex, setSelectedFrameIndex] = useState<number>(0);
+  const [frameRate, setFrameRate] = useState<number>(10);  // Default to 10fps
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationCanvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<SocketIOClient.Socket>();
+
+  const animateFrames = () => {
+    const canvas = animationCanvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    let frameIndex = 0;
+    
+    const drawNextFrame = () => {
+        if (frameIndex >= savedFrames.length) {
+            frameIndex = 0; // loop back to the first frame if desired
+        }
+
+        const currentFrame = savedFrames[frameIndex];
+        ctx.putImageData(currentFrame, 0, 0);
+        if (broadcastAnimation) {
+          sendE131Data(animationCanvasRef.current!);
+        }
+        frameIndex++;
+    };
+
+    // Set an interval to draw each frame. Here, I've set it to 100ms (10fps), but adjust as needed.
+    const intervalDuration = 1000 / frameRate;
+    return window.setInterval(drawNextFrame, intervalDuration);
+};
+
   const deleteFrame = (index: number) => {
     setSavedFrames(prevFrames => prevFrames.filter((_, idx) => idx !== index));
+    if (selectedFrameIndex === index) {
+      setSelectedFrameIndex(Math.max(0, index - 1));
+    }
   };
 
   const saveCurrentFrame = () => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
-    const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    setSavedFrames(prevFrames => [...prevFrames, imageData]);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const imageData = ctx.getImageData(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
+    setSavedFrames(prevFrames => [...prevFrames.slice(0, selectedFrameIndex + 1), initialImageData, ...prevFrames.slice(selectedFrameIndex + 1, )]);
+    setSelectedFrameIndex(selectedFrameIndex + 1)
+    console.log(imageData)
+  };
+
+  const duplicateCurrentFrame = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const imageData = ctx.getImageData(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
+    setSavedFrames(prevFrames => [...prevFrames.slice(0, selectedFrameIndex + 1), imageData, ...prevFrames.slice(selectedFrameIndex + 1, )]);
+    setSelectedFrameIndex(selectedFrameIndex + 1)
+    console.log(imageData)
   };
 
   const displayFrame = (frameData: ImageData, index: number) => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     ctx.putImageData(frameData, 0, 0);
     setSelectedFrameIndex(index)
 };
@@ -42,10 +85,10 @@ const App = () => {
   const updateSelectedFrame = () => {
     if (selectedFrameIndex !== null) {
         const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        const imageData = ctx.getImageData(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
         setSavedFrames(prevFrames => prevFrames.map((frame, idx) => idx === selectedFrameIndex ? imageData : frame));
-        setSelectedFrameIndex(null); // Reset the selected frame index
+        // setSelectedFrameIndex(null); // Reset the selected frame index
     }
   };
 
@@ -58,18 +101,18 @@ const App = () => {
       const img = new Image();
       img.onload = () => {
         const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        // for (let i = 0; i < PIXEL_COUNT; i++) {
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        ctx.drawImage(img, 0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
+        // for (let i = 0; i < Constants.PIXEL_COUNT; i++) {
         //   let x;
-        //   if ((Math.floor(i / MATRIX_SIZE))%2===0) {
-        //     x = ((MATRIX_SIZE-1) * PIXEL_SIZE)-((i % MATRIX_SIZE) * PIXEL_SIZE);
+        //   if ((Math.floor(i / Constants.MATRIX_SIZE))%2===0) {
+        //     x = ((Constants.MATRIX_SIZE-1) * Constants.PIXEL_SIZE)-((i % Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE);
         //   }
         //   else {
-        //     x = (i % MATRIX_SIZE) * PIXEL_SIZE;
+        //     x = (i % Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE;
         //   }
-        //   const y = ((MATRIX_SIZE-1) * PIXEL_SIZE) - (Math.floor(i / MATRIX_SIZE) * PIXEL_SIZE);
-        //   const pixelColorData = ctx.getImageData(x, y, PIXEL_SIZE, PIXEL_SIZE);
+        //   const y = ((Constants.MATRIX_SIZE-1) * Constants.PIXEL_SIZE) - (Math.floor(i / Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE);
+        //   const pixelColorData = ctx.getImageData(x, y, Constants.PIXEL_SIZE, Constants.PIXEL_SIZE);
         //   ctx.putImageData(pixelColorData, 0, 0)
         // }
       };
@@ -113,21 +156,20 @@ const App = () => {
     return correctedRGB;
   }
 
-  const sendE131Data = () => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
+  const sendE131Data = (canvas: HTMLCanvasElement): void => {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     const pixelData: number[] = [];
 
-    for (let i = 0; i < PIXEL_COUNT; i++) {
+    for (let i = 0; i < Constants.PIXEL_COUNT; i++) {
       let x;
-      if ((Math.floor(i / MATRIX_SIZE))%2===0) {
-        x = ((MATRIX_SIZE-1) * PIXEL_SIZE)-((i % MATRIX_SIZE) * PIXEL_SIZE);
+      if ((Math.floor(i / Constants.MATRIX_SIZE))%2===0) {
+        x = ((Constants.MATRIX_SIZE-1) * Constants.PIXEL_SIZE)-((i % Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE);
       }
       else {
-        x = (i % MATRIX_SIZE) * PIXEL_SIZE;
+        x = (i % Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE;
       }
-      const y = ((MATRIX_SIZE-1) * PIXEL_SIZE) - (Math.floor(i / MATRIX_SIZE) * PIXEL_SIZE);
-      const pixelColorData = ctx.getImageData(x, y, PIXEL_SIZE, PIXEL_SIZE);
+      const y = ((Constants.MATRIX_SIZE-1) * Constants.PIXEL_SIZE) - (Math.floor(i / Constants.MATRIX_SIZE) * Constants.PIXEL_SIZE);
+      const pixelColorData = ctx.getImageData(x, y, Constants.PIXEL_SIZE, Constants.PIXEL_SIZE);
       const gammaCorrectedData = gammaCorrectionWithRGBAdjustment(pixelColorData.data, gamma, RGBAdjustment)
       const [r, g, b] = gammaCorrectedData;
       const adjustedR = Math.floor(r * brightness);
@@ -151,68 +193,99 @@ const App = () => {
 
   const handleMouseUp = () => {
     setDrawing(false);
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
+    if (selectedFrameIndex !== null) {
+      updateSelectedFrame();
+    }
   };
   const handleBrightnessChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBrightness(parseFloat(event.target.value));
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
   };
 
   const handleGammaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGamma(parseFloat(event.target.value));
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
   };
 
   const handleRedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRGBAdjustment([parseFloat(event.target.value), RGBAdjustment[1], RGBAdjustment[2]]);
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
   };
 
   const handleGreenChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRGBAdjustment([RGBAdjustment[0], parseFloat(event.target.value), RGBAdjustment[2]]);
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
   };
 
   const handleBlueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRGBAdjustment([RGBAdjustment[0], RGBAdjustment[1], parseFloat(event.target.value)]);
-    sendE131Data();
+    sendE131Data(canvasRef.current!);
   };
 
   const drawPixel = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string) => {
     ctx.fillStyle = color;
-    ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx.fillRect(x * Constants.PIXEL_SIZE, y * Constants.PIXEL_SIZE, Constants.PIXEL_SIZE, Constants.PIXEL_SIZE);
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    const pixelX = Math.floor(x / PIXEL_SIZE);
-    const pixelY = Math.floor(y / PIXEL_SIZE);
+    const pixelX = Math.floor(x / Constants.PIXEL_SIZE);
+    const pixelY = Math.floor(y / Constants.PIXEL_SIZE);
 
     drawPixel(ctx, pixelX, pixelY, color);
   };
 
   useEffect(() => {
     // Initialize socket connection
-    socketRef.current = io(SOCKET_SERVER_URL);
+    socketRef.current = io(Constants.SOCKET_SERVER_URL);
 
     // Initialize canvas
     const canvas = canvasRef.current!;
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    const ctx = canvas.getContext('2d')!;
+    canvas.width = Constants.CANVAS_WIDTH;
+    canvas.height = Constants.CANVAS_HEIGHT;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillRect(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
 
     // Clean up on unmount
     return () => {
       socketRef.current!.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      const currentFrame = savedFrames[selectedFrameIndex]!;
+      // extract to method
+      const canvas = canvasRef.current!;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      if (currentFrame) {
+        ctx.putImageData(currentFrame, 0, 0);
+      }
+      else {
+        setSelectedFrameIndex(0)
+        ctx.putImageData(savedFrames[0], 0, 0);
+      }
+      sendE131Data(animationCanvasRef.current!);
+    }
+  }, [savedFrames, selectedFrameIndex]);
+
+  useEffect(() => {
+    const intervalId = animateFrames();
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId); // Use clearInterval to stop the animation
+      }
+    };
+  }, [savedFrames, frameRate, broadcastAnimation]);
 
   const handleColorChange = (newColor: { hex: string }) => {
     setColor(newColor.hex);
@@ -298,6 +371,26 @@ const App = () => {
           </label>
         </div>
       </div>
+      <div className="animation-container">
+        <div className='scaled-animation-container'>
+          <div className="animation-content">
+            <canvas ref={animationCanvasRef} width={Constants.CANVAS_WIDTH} height={Constants.CANVAS_HEIGHT}></canvas>
+          </div>
+        </div>
+        <label>
+          Frame rate: {frameRate} fps
+          <input
+            type="range"
+            min="1"
+            max="60"
+            value={frameRate}
+            onChange={(e) => setFrameRate(Number(e.target.value))}
+          />
+      </label>
+      <div className= { !broadcastAnimation ? 'button-container' : 'button-container button-container-selected'}>
+        <button onClick={() => setBroadcastAnimation(!broadcastAnimation)}>Broadcast Animation</button>
+      </div>
+      </div>
       <div className="main-content">
         <div className="canvas-container">
           <canvas 
@@ -307,31 +400,25 @@ const App = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             style={{cursor: `url(${pencilImg}) 0 24, auto`}}
-            />
+          />
         </div>
         <div className="button-container">
           <button onClick={saveCurrentFrame}>Add New Frame</button>
+          <button onClick={duplicateCurrentFrame}>Duplicate Frame</button>
           <button onClick={updateSelectedFrame}>Update Selected Frame</button>
-          <button onClick={sendE131Data} style={{display: 'flex',  justifyContent: 'center', cursor: 'pointer'}}>Send</button>
+          <button onClick={() => sendE131Data(canvasRef.current!)} style={{display: 'flex',  justifyContent: 'center', cursor: 'pointer'}}>Send</button>
+          <button onClick={undoFrames}>Undo</button>
         </div>
       </div>
       <div className="frame-container">
           <h3>Frames</h3>
-          {savedFrames.map((frameData, index) => (
-              <div className={`frame-preview ${index === selectedFrameIndex ? 'selected-frame' : ''}`} key={index}>
-                  <div className="scaled-container">
-                    <canvas 
-                        width={CANVAS_WIDTH} 
-                        height={CANVAS_HEIGHT} 
-                        ref={el => el && el.getContext('2d').putImageData(frameData, 0, 0)}
-                    />
-                  </div>
-                  <div className="button-container">
-                    <button onClick={() => deleteFrame(index)}>X</button>
-                    <button onClick={() => displayFrame(frameData, index)}>edit</button>
-                  </div>
-              </div>
-          ))} 
+          <FrameList 
+            savedFrames={savedFrames} 
+            selectedFrameIndex={selectedFrameIndex}
+            displayFrame={displayFrame}
+            deleteFrame={deleteFrame}
+            onReorder={(reorderedFrames) => setSavedFrames(() => reorderedFrames)} // assuming `setSavedFrames` is the useState setter
+          />
       </div>
     </div>
   );
