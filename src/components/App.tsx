@@ -57,13 +57,9 @@ const App = () => {
     }
   };
 
-  const saveCurrentFrame = () => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-    const imageData = ctx.getImageData(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
+  const AddNewFrame = () => {
     setSavedFrames(prevFrames => [...prevFrames.slice(0, selectedFrameIndex + 1), initialImageData, ...prevFrames.slice(selectedFrameIndex + 1, )]);
     setSelectedFrameIndex(selectedFrameIndex + 1)
-    console.log(imageData)
   };
 
   const duplicateCurrentFrame = () => {
@@ -72,7 +68,6 @@ const App = () => {
     const imageData = ctx.getImageData(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
     setSavedFrames(prevFrames => [...prevFrames.slice(0, selectedFrameIndex + 1), imageData, ...prevFrames.slice(selectedFrameIndex + 1, )]);
     setSelectedFrameIndex(selectedFrameIndex + 1)
-    console.log(imageData)
   };
 
   const displayFrame = (frameData: ImageData, index: number) => {
@@ -80,7 +75,15 @@ const App = () => {
     const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     ctx.putImageData(frameData, 0, 0);
     setSelectedFrameIndex(index)
-};
+  };
+
+  const clearFrame = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.putImageData(initialImageData, 0, 0);
+    updateSelectedFrame();
+    sendE131Data(canvas);
+  };
 
   const updateSelectedFrame = () => {
     if (selectedFrameIndex !== null) {
@@ -272,7 +275,7 @@ const App = () => {
         setSelectedFrameIndex(0)
         ctx.putImageData(savedFrames[0], 0, 0);
       }
-      sendE131Data(animationCanvasRef.current!);
+      sendE131Data(canvasRef.current!);
     }
   }, [savedFrames, selectedFrameIndex]);
 
@@ -403,11 +406,13 @@ const App = () => {
           />
         </div>
         <div className="button-container">
-          <button onClick={saveCurrentFrame}>Add New Frame</button>
+          <button onClick={AddNewFrame}>Add New Frame</button>
           <button onClick={duplicateCurrentFrame}>Duplicate Frame</button>
           <button onClick={updateSelectedFrame}>Update Selected Frame</button>
-          <button onClick={() => sendE131Data(canvasRef.current!)} style={{display: 'flex',  justifyContent: 'center', cursor: 'pointer'}}>Send</button>
+          <button onClick={() => sendE131Data(canvasRef.current!)} style={{ cursor: 'pointer'}}>Send</button>
+          <button onClick={AddNewFrame}>Add New Frame</button>
           <button onClick={undoFrames}>Undo</button>
+          <button onClick={clearFrame}>Clear Frame</button>
         </div>
       </div>
       <div className="frame-container">

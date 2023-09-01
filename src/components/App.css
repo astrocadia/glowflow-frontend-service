@@ -30,6 +30,10 @@
   width: fit-content;       /* Maximum width for the button */
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+.button-container button:hover, .frame-container button:hover {
+    background-color: darkgray;
 }
 
 
