@@ -1,37 +1,54 @@
-import React, { useRef, useEffect, MouseEvent } from 'react';
+import React, { useRef, useEffect, MouseEvent } from "react";
 
 interface CanvasProps {
   width: number;
   height: number;
   cellSize: number;
   color: string;
-  onCanvasUpdate: (canvas: HTMLCanvasElement) => void;
+  onCanvasUpdate: (canvas: string) => void;
 }
 
 const canvasToHexString = (canvas: HTMLCanvasElement, cellSize: number) => {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
-  
-    const { width, height } = canvas;
-  
-    let hexString = '';
-  
-    for (let y = 0; y < height; y++) {
-      for (let x = (y % 2 === 0) ? 0 : width - 1; (y % 2 === 0) ? x < width : x >= 0; (y % 2 === 0) ? x++ : x--) {
-        const pixelData = ctx.getImageData(x * cellSize, y * cellSize, 1, 1).data;
-        const [r, g, b] = pixelData;
-        const hexColor = ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-        hexString += hexColor;
-      }
-    }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
 
-    return hexString;
+  const { width, height } = canvas;
+
+  let hexString = "";
+
+  for (let y = 0; y < height; y++) {
+    for (
+      let x = y % 2 === 0 ? 0 : width - 1;
+      y % 2 === 0 ? x < width : x >= 0;
+      y % 2 === 0 ? x++ : x--
+    ) {
+      const pixelData = ctx.getImageData(x * cellSize, y * cellSize, 1, 1).data;
+      const [r, g, b] = pixelData;
+      const hexColor = ((1 << 24) + (r << 16) + (g << 8) + b)
+        .toString(16)
+        .slice(1);
+      hexString += hexColor;
+    }
+  }
+
+  return hexString;
 };
 
-const Canvas: React.FC<CanvasProps> = ({ width, height, cellSize, color, onCanvasUpdate }) => {
+const Canvas: React.FC<CanvasProps> = ({
+  width,
+  height,
+  cellSize,
+  color,
+  onCanvasUpdate,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const drawPixel = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string) => {
+  const drawPixel = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    color: string
+  ) => {
     ctx.fillStyle = color;
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
   };
@@ -40,7 +57,7 @@ const Canvas: React.FC<CanvasProps> = ({ width, height, cellSize, color, onCanva
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
