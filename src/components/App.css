@@ -1,5 +1,44 @@
 .app-container {
   display: flex;
+  height: 100dvh;
+  width: 100%;
+  gap: 10px;
+}
+
+.app-container section {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  flex: 1;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+
+.app-container section.tool-container {
+  border: 1px solid black;
+  border-radius: 50px;
+  max-width: 230px;
+  padding: 2rem 1rem;
+  justify-content: space-between;
+}
+
+.tool-container .button-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tool-container .button-container button {
+  width: 80%;
+}
+
+.app-container section.canvas-container {
+  flex: 2;
 }
 
 .tool-content {
@@ -16,23 +55,6 @@
   margin: 0px;
   padding: 0px 5px 0px 0px;
   min-width: 65px;
-}
-
-.button-container button,
-.frame-container button {
-  display: flex;
-  margin: 5px;
-  padding: 5px 10px; /* Add padding to increase button size */ /* Hide overflowing text */
-  white-space: nowrap; /* Prevents the text from wrapping onto the next line */
-  text-overflow: ellipsis; /* Adds an ellipsis (...) when the text overflows */
-  width: fit-content; /* Maximum width for the button */
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.button-container button:hover,
-.frame-container button:hover {
-  background-color: darkgray;
 }
 
 .frame-preview {
@@ -53,20 +75,6 @@
   overflow: hidden;
 }
 
-.animation-container {
-  display: block;
-  margin: 20px 10px 0px 0px;
-  padding: 2px;
-  border: 1px solid #ddd;
-  height: fit-content;
-  width: 270px;
-}
-
-.animation-content {
-  padding: 0px;
-  margin: 0px;
-}
-
 .frame-preview canvas {
   padding: 0px;
   margin: 0px;
@@ -83,11 +91,6 @@
 .pixel {
   width: 30px;
   height: 30px;
-}
-
-.canvas-container {
-  display: flex; /* Use Flexbox */
-  align-items: center; /* Center the canvases vertically if there's extra space */
 }
 
 #drawingCanvas,
@@ -107,6 +110,6 @@
   margin: 2px 0px 0px 0px;
 }
 
-.button-container-selected button {
+.button-selected {
   background-color: blue;
 }
