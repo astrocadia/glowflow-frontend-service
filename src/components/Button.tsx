@@ -1,19 +1,17 @@
-import React from 'react';
-import axios from 'axios';
+import React from "react";
+import axios from "axios";
 
-const url: string = 'http://192.168.1.24/setMatrix'
+const url = "http://192.168.1.24/setMatrix";
 interface ButtonProps {
-    data: string;
+  data: string;
 }
 
-const Button: React.FC<ButtonProps> = ( { data } ) => {
-    const handleClick = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        await axios.post(url, data);
-    };
+const Button: React.FC<ButtonProps> = ({ data }) => {
+  const handleClick = async () => {
+    await axios.post(url, data);
+  };
 
-  return (
-    <button onClick={handleClick}>Post</button>
-  );
+  return <button onClick={handleClick}>Post</button>;
 };
 
 export default Button;

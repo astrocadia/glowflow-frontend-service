@@ -12,37 +12,35 @@
   margin-right: 20px; /* Gives some space between main content and frame previews */
 }
 
-.animation-content canvas {
-}
-
 .frame-container {
   margin: 0px;
   padding: 0px 5px 0px 0px;
   min-width: 65px;
 }
 
-.button-container button, .frame-container button {
+.button-container button,
+.frame-container button {
   display: flex;
   margin: 5px;
-  padding: 5px 10px;        /* Add padding to increase button size */      /* Hide overflowing text */
-  white-space: nowrap;      /* Prevents the text from wrapping onto the next line */
-  text-overflow: ellipsis;  /* Adds an ellipsis (...) when the text overflows */
-  width: fit-content;       /* Maximum width for the button */
+  padding: 5px 10px; /* Add padding to increase button size */ /* Hide overflowing text */
+  white-space: nowrap; /* Prevents the text from wrapping onto the next line */
+  text-overflow: ellipsis; /* Adds an ellipsis (...) when the text overflows */
+  width: fit-content; /* Maximum width for the button */
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
-.button-container button:hover, .frame-container button:hover {
-    background-color: darkgray;
+.button-container button:hover,
+.frame-container button:hover {
+  background-color: darkgray;
 }
 
-
 .frame-preview {
-    /* Adjust as needed */
-    display: block;
-    margin: 0px;
-    padding: 2px;
-    border: 1px solid #ddd;
+  /* Adjust as needed */
+  display: block;
+  margin: 0px;
+  padding: 2px;
+  border: 1px solid #ddd;
 }
 
 .selected-frame {
@@ -62,9 +60,6 @@
   border: 1px solid #ddd;
   height: fit-content;
   width: 270px;
-}
-
-.scaled-animation-container {
 }
 
 .animation-content {
@@ -91,11 +86,12 @@
 }
 
 .canvas-container {
-  display: flex;           /* Use Flexbox */
-  align-items: center;     /* Center the canvases vertically if there's extra space */
+  display: flex; /* Use Flexbox */
+  align-items: center; /* Center the canvases vertically if there's extra space */
 }
 
-#drawingCanvas, #viewingCanvas {
+#drawingCanvas,
+#viewingCanvas {
   margin: 5px; /* Optional: Add some space between the two canvases */
 }
 
