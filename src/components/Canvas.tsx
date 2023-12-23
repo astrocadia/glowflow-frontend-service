@@ -6,6 +6,7 @@ interface CanvasProps {
   cellSize: number;
   color: string;
   onCanvasUpdate: (canvas: string) => void;
+  imageData: ImageData;
 }
 
 const canvasToHexString = (canvas: HTMLCanvasElement, cellSize: number) => {
@@ -40,6 +41,7 @@ const Canvas: React.FC<CanvasProps> = ({
   cellSize,
   color,
   onCanvasUpdate,
+  imageData,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -74,9 +76,11 @@ const Canvas: React.FC<CanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const context = canvas.getContext("2d", { willReadFrequently: false });
+    context?.putImageData(imageData, 0, 0);
     canvas.width = width * cellSize;
     canvas.height = height * cellSize;
-  }, [width, height, cellSize]);
+  }, [width, height, cellSize, imageData]);
 
   return <canvas ref={canvasRef} onClick={handleCanvasClick} />;
 };
