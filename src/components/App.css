@@ -108,7 +108,7 @@ button {
 .sketch-picker {
   background-color: #484848 !important;
   box-shadow: none !important;
-  color: whitee !important;
+  color: white !important;
 }
 
 .sketch-picker input,
@@ -116,7 +116,8 @@ button {
   display: none !important;
 }
 
-.button-31 {
+.btn,
+.broadcast-btn {
   background-color: #222;
   border-style: none;
   box-sizing: border-box;
@@ -133,7 +134,7 @@ button {
   min-width: 10px;
   outline: none;
   overflow: hidden;
-  padding: 9px 20px 8px;
+  padding: 0.6em 2em;
   position: relative;
   text-align: center;
   text-transform: none;
@@ -143,27 +144,17 @@ button {
   width: 100%;
 }
 
-.button-31:hover,
-.button-31:active {
+.btn:hover,
+.btn:active {
   opacity: 0.75;
 }
 
-.button-85 {
-  padding: 0.6em 2em;
-  border: none;
-  outline: none;
-  color: rgb(255, 255, 255);
-  background: #111;
-  cursor: pointer;
-  position: relative;
+.broadcast-btn {
+  overflow: auto;
   z-index: 0;
-  border-radius: 10px;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
 }
 
-.button-85:before {
+.broadcast-btn:before {
   content: "";
   background: linear-gradient(
     45deg,
@@ -186,7 +177,7 @@ button {
   -webkit-filter: blur(5px);
   width: calc(100% + 4px);
   height: calc(100% + 4px);
-  animation: glowing-button-85 20s linear infinite;
+  animation: glowing-button 20s linear infinite;
   transition: opacity 0.3s ease-in-out;
   border-radius: 10px;
 }
@@ -196,7 +187,7 @@ button {
   animation: none;
 }
 
-@keyframes glowing-button-85 {
+@keyframes glowing-button {
   0% {
     background-position: 0 0;
   }
@@ -208,7 +199,7 @@ button {
   }
 }
 
-.button-85:after {
+.broadcast-btn:after {
   z-index: -1;
   content: "";
   position: absolute;
@@ -220,13 +211,13 @@ button {
   border-radius: 10px;
 }
 
-.button-85:not([disabled]):focus {
+.broadcast-btn:not([disabled]):focus {
   box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.5),
     -0.125rem -0.125rem 1rem rgba(239, 71, 101, 0.5),
     0.125rem 0.125rem 1rem rgba(255, 154, 90, 0.5);
 }
 
-.button-85:not([disabled]):hover {
+.broadcast-btn:not([disabled]):hover {
   box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.5),
     -0.125rem -0.125rem 1rem rgba(239, 71, 101, 0.5),
     0.125rem 0.125rem 1rem rgba(255, 154, 90, 0.5);

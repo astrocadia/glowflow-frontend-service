@@ -401,7 +401,9 @@ const App = () => {
             </div>
           </div>
           <button
-            className={"button-85" + (broadcastAnimation ? " selected" : "")}
+            className={
+              "broadcast-btn" + (broadcastAnimation ? " selected" : "")
+            }
             onClick={() => setBroadcastAnimation(!broadcastAnimation)}
           >
             Broadcast Animation
@@ -439,23 +441,23 @@ const App = () => {
           <img src={logo} width={150} height={150} />
         </div>
         <div className="button-container">
-          <button className="button-31" onClick={AddNewFrame}>
+          <button className="btn" onClick={AddNewFrame}>
             Add New Frame
           </button>
-          <button className="button-31" onClick={duplicateCurrentFrame}>
+          <button className="btn" onClick={duplicateCurrentFrame}>
             Duplicate Frame
           </button>
-          <button className="button-31" onClick={clearFrame}>
+          <button className="btn" onClick={clearFrame}>
             Clear Frame
           </button>
-          <button className="button-31" onClick={updateSelectedFrame}>
+          <button className="btn" onClick={updateSelectedFrame}>
             Update Selected
           </button>
-          <button className="button-31" onClick={undoFrames}>
+          <button className="btn" onClick={undoFrames}>
             Undo
           </button>
           <button
-            className="button-31"
+            className="btn"
             onClick={() => canvasRef.current && sendE131Data(canvasRef.current)}
           >
             Send
