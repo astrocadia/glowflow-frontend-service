@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SketchPicker } from "react-color";
 import { Socket, io } from "socket.io-client";
 import pencilImg from "../assets/pencil-cursor.png";
-import "./App.css";
+import logo from "../assets/glow-flow-logo.png";
 import * as Constants from "./constants";
-import FrameList from "./FrameList";
+import "./App.css";
 import useUndo from "./hooks/useUndo";
+import Canvas from "./Canvas";
+// import * as Constants from "./constants";
 
 // Create a zero-filled Uint8ClampedArray for the ImageData
 const initialDataArray = new Uint8ClampedArray(
@@ -18,8 +20,9 @@ const initialImageData = new ImageData(
   Constants.CANVAS_WIDTH,
   Constants.CANVAS_HEIGHT
 );
-
 const App = () => {
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState<number | undefined>(100);
   const [broadcastAnimation, setBroadcastAnimation] = useState(false);
   const [color, setColor] = useState("#ff0000");
   const [brightness, setBrightness] = useState(1);
@@ -271,33 +274,6 @@ const App = () => {
     if (canvasRef.current) sendE131Data(canvasRef.current);
   };
 
-  const handleRedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRGBAdjustment([
-      parseFloat(event.target.value),
-      RGBAdjustment[1],
-      RGBAdjustment[2],
-    ]);
-    if (canvasRef.current) sendE131Data(canvasRef.current);
-  };
-
-  const handleGreenChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRGBAdjustment([
-      RGBAdjustment[0],
-      parseFloat(event.target.value),
-      RGBAdjustment[2],
-    ]);
-    if (canvasRef.current) sendE131Data(canvasRef.current);
-  };
-
-  const handleBlueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRGBAdjustment([
-      RGBAdjustment[0],
-      RGBAdjustment[1],
-      parseFloat(event.target.value),
-    ]);
-    if (canvasRef.current) sendE131Data(canvasRef.current);
-  };
-
   const drawPixel = (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -381,169 +357,113 @@ const App = () => {
   const handleColorChange = (newColor: { hex: string }) => {
     setColor(newColor.hex);
   };
-
+  useLayoutEffect(() => {
+    if (canvasContainerRef.current) {
+      const { clientHeight, clientWidth } = canvasContainerRef.current;
+      let size = (clientHeight ?? 100) - 180;
+      console.log({ size, clientWidth });
+      if (clientWidth < size) size = clientWidth - 20;
+      setCanvasSize(size);
+    }
+  }, []);
   return (
     <div className="app-container">
-      <div className="tool-content">
-        <div>
-          <SketchPicker color={color} onChange={handleColorChange} />
-          <div style={{ display: "grid" }}>
-            <label>
-              Brightness:
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={brightness}
-                onChange={handleBrightnessChange}
-              />
-            </label>
-            <span style={{ display: "inline-flex" }}>
-              <label>
-                Gamma Correction:
-                <input
-                  type="range"
-                  min="0.1"
-                  max="3.0"
-                  step="0.1"
-                  value={gamma}
-                  onChange={handleGammaChange}
-                />
-              </label>
-              <p>{gamma}</p>
-            </span>
-            <span style={{ display: "inline-flex" }}>
-              <label>
-                Red Correction:
-                <input
-                  type="range"
-                  min="0.1"
-                  max="2.0"
-                  step="0.01"
-                  value={RGBAdjustment[0]}
-                  onChange={handleRedChange}
-                />
-              </label>
-              <p>{RGBAdjustment[0]}</p>
-            </span>
-            <span style={{ display: "inline-flex" }}>
-              <label>
-                Green Correction:
-                <input
-                  type="range"
-                  min="0.1"
-                  max="2.0"
-                  step="0.01"
-                  value={RGBAdjustment[1]}
-                  onChange={handleGreenChange}
-                />
-              </label>
-              <p>{RGBAdjustment[1]}</p>
-            </span>
-            <span style={{ display: "inline-flex" }}>
-              <label>
-                Blue Correction:
-                <input
-                  type="range"
-                  min="0.1"
-                  max="2.0"
-                  step="0.01"
-                  value={RGBAdjustment[2]}
-                  onChange={handleBlueChange}
-                />
-              </label>
-              <p>{RGBAdjustment[2]}</p>
-            </span>
-          </div>
-          <label
-            style={{
-              fontSize: "12pt",
-              padding: "2px",
-              cursor: "pointer",
-              borderRadius: "2px",
-              border: "1px solid black",
-              backgroundColor: "white",
-            }}
-          >
-            Upload Image:
-            <input
-              style={{ display: "none" }}
-              type="file"
-              accept="image/png, image/jpeg"
-              onChange={handleImageUpload}
-            />
-          </label>
-        </div>
-      </div>
-      <div className="animation-container">
-        <div className="scaled-animation-container">
-          <div className="animation-content">
-            <canvas
-              ref={animationCanvasRef}
-              width={Constants.CANVAS_WIDTH}
-              height={Constants.CANVAS_HEIGHT}
-            ></canvas>
-          </div>
-        </div>
+      <section className="tool-container">
+        <SketchPicker width="80%" color={color} onChange={handleColorChange} />
         <label>
-          Frame rate: {frameRate} fps
+          Brightness:
           <input
             type="range"
-            min="1"
-            max="60"
-            value={frameRate}
-            onChange={(e) => setFrameRate(Number(e.target.value))}
+            min="0"
+            max="1"
+            step="0.01"
+            value={brightness}
+            onChange={handleBrightnessChange}
           />
         </label>
-        <div
-          className={
-            !broadcastAnimation
-              ? "button-container"
-              : "button-container button-container-selected"
-          }
-        >
-          <button onClick={() => setBroadcastAnimation(!broadcastAnimation)}>
+        <span style={{ display: "inline-flex" }}>
+          <label>
+            Gamma Correction:
+            <input
+              type="range"
+              min="0.1"
+              max="3.0"
+              step="0.1"
+              value={gamma}
+              onChange={handleGammaChange}
+            />
+          </label>
+        </span>
+        <div className="animation-container">
+          <div className="scaled-animation-container">
+            <div className="animation-content">
+              <canvas ref={animationCanvasRef} width={200}></canvas>
+            </div>
+          </div>
+          <button
+            className={
+              "broadcast-btn" + (broadcastAnimation ? " selected" : "")
+            }
+            onClick={() => setBroadcastAnimation(!broadcastAnimation)}
+          >
             Broadcast Animation
           </button>
         </div>
-      </div>
-      <div className="main-content">
-        <div className="canvas-container">
-          <canvas
-            id="drawingCanvas"
-            ref={canvasRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            style={{ cursor: `url(${pencilImg}) 0 24, auto` }}
-          />
+      </section>
+      <section ref={canvasContainerRef} className="canvas-container">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          style={{
+            cursor: `url(${pencilImg}) 0 24, auto`,
+            border: "1px solid white",
+          }}
+          height={canvasSize}
+          width={canvasSize}
+        />
+        <div className="saved-canvas-container">
+          {savedFrames.map((frame) => (
+            <Canvas
+              width={150}
+              height={150}
+              cellSize={1}
+              color={frame.colorSpace}
+              onCanvasUpdate={console.log}
+              imageData={frame}
+            />
+          ))}
+        </div>
+      </section>
+      <section className="tool-container">
+        <div>
+          <img src={logo} width={150} height={150} />
         </div>
         <div className="button-container">
-          <button onClick={AddNewFrame}>Add New Frame</button>
-          <button onClick={duplicateCurrentFrame}>Duplicate Frame</button>
-          <button onClick={updateSelectedFrame}>Update Selected Frame</button>
+          <button className="btn" onClick={AddNewFrame}>
+            Add New Frame
+          </button>
+          <button className="btn" onClick={duplicateCurrentFrame}>
+            Duplicate Frame
+          </button>
+          <button className="btn" onClick={clearFrame}>
+            Clear Frame
+          </button>
+          <button className="btn" onClick={updateSelectedFrame}>
+            Update Selected
+          </button>
+          <button className="btn" onClick={undoFrames}>
+            Undo
+          </button>
           <button
+            className="btn"
             onClick={() => canvasRef.current && sendE131Data(canvasRef.current)}
-            style={{ cursor: "pointer" }}
           >
             Send
           </button>
-          <button onClick={AddNewFrame}>Add New Frame</button>
-          <button onClick={undoFrames}>Undo</button>
-          <button onClick={clearFrame}>Clear Frame</button>
         </div>
-      </div>
-      <div className="frame-container">
-        <h3>Frames</h3>
-        <FrameList
-          savedFrames={savedFrames}
-          selectedFrameIndex={selectedFrameIndex}
-          displayFrame={displayFrame}
-          deleteFrame={deleteFrame}
-          onReorder={(reorderedFrames) => setSavedFrames(() => reorderedFrames)} // assuming `setSavedFrames` is the useState setter
-        />
-      </div>
+      </section>
     </div>
   );
 };
